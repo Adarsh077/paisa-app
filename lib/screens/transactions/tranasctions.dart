@@ -19,7 +19,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text('Kharchi')),
+      appBar: AppBar(title: const Text('Paisa')),
       body: Column(
         children: [
           TransactionsOverview(),
