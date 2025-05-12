@@ -41,16 +41,12 @@ class MainApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: lightScheme,
             useMaterial3: true,
-            textTheme: GoogleFonts.poppinsTextTheme(
-              Theme.of(context).textTheme,
-            ),
+            textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
           ),
           darkTheme: ThemeData(
             colorScheme: darkScheme,
             useMaterial3: true,
-            textTheme: GoogleFonts.poppinsTextTheme(
-              Theme.of(context).textTheme,
-            ),
+            textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
           ),
           themeMode: ThemeMode.system,
           initialRoute: routes.initalRoute,
