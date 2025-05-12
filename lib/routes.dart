@@ -1,4 +1,6 @@
 const home = '/transactions';
+const scanQr = '/scan-qr';
+const pay = '/pay';
 const agent = '/agent';
 
-const initalRoute = home;
+const initalRoute = agent;

@@ -50,9 +50,27 @@ class MainApp extends StatelessWidget {
           ),
           themeMode: ThemeMode.system,
           initialRoute: routes.initalRoute,
-          routes: {
-            routes.home: (context) => const TransactionsScreen(),
-            routes.agent: (context) => const AgentScreen(),
+          onGenerateRoute: (RouteSettings settings) {
+            print('build route for ${settings.name}');
+            var appRoutes = <String, WidgetBuilder>{
+              routes.home: (context) => const TransactionsScreen(),
+              routes.agent: (context) => const AgentScreen(),
+              routes.pay:
+                  (context) => MakePaymentScreen(
+                    settings.arguments as Map<String, String>,
+                  ),
+              routes.scanQr: (context) => ScanQrCode(),
+            };
+            WidgetBuilder builder =
+                appRoutes[settings.name] ??
+                (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: Text('No route defined for ${settings.name}'),
+                    ),
+                  );
+                };
+            return MaterialPageRoute(builder: (ctx) => builder(ctx));
           },
         );
       },
