@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'agent.service.dart';
-import '../../routes.dart' as routes;
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key});
@@ -15,17 +14,6 @@ class _AgentScreenState extends State<AgentScreen> {
   final AgentService _agentService = AgentService();
   bool _isLoading = false;
   bool _cancelRequested = false;
-  bool _hasInput = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      setState(() {
-        _hasInput = _controller.text.trim().isNotEmpty;
-      });
-    });
-  }
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
@@ -88,75 +76,117 @@ class _AgentScreenState extends State<AgentScreen> {
       appBar: AppBar(
         title: const Text('Paisa'),
         automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(14),
-                itemCount: _messages.length + (_isLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (_isLoading && index == _messages.length) {
-                    // Show loading indicator as agent message
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary,
+              child:
+                  _messages.isEmpty
+                      ? Center(
+                        child: ShaderMask(
+                          shaderCallback: (Rect bounds) {
+                            return LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.secondary,
+                                Theme.of(context).colorScheme.tertiary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds);
+                          },
+                          blendMode: BlendMode.srcIn,
+                          child: Text(
+                            'Hello, Adarsh',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 12,
+                                  color: Colors.black.withOpacity(0.08),
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.all(14),
+                        itemCount: _messages.length + (_isLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (_isLoading && index == _messages.length) {
+                            // Show loading indicator as agent message
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          final msg = _messages[index];
+                          final isUser = msg['role'] == 'user';
+                          return Align(
+                            alignment:
+                                isUser
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isUser
+                                        ? Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                msg['text']!,
+                                style: TextStyle(
+                                  color:
+                                      isUser
+                                          ? Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimaryContainer
+                                          : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  }
-                  final msg = _messages[index];
-                  final isUser = msg['role'] == 'user';
-                  return Align(
-                    alignment:
-                        isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            isUser
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        msg['text']!,
-                        style: TextStyle(
-                          color:
-                              isUser
-                                  ? Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
             ),
             Container(
               padding: const EdgeInsets.all(14),
@@ -165,7 +195,7 @@ class _AgentScreenState extends State<AgentScreen> {
                   Expanded(
                     child: TextField(
                       controller: _controller,
-                      // autofocus: true,
+                      autofocus: true,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
@@ -206,43 +236,20 @@ class _AgentScreenState extends State<AgentScreen> {
                                     onPressed: _stopRequest,
                                   ),
                                 )
-                                : (_hasInput
-                                    ? Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: IconButton.filledTonal(
-                                        icon: Icon(
-                                          Icons.send_rounded,
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.onPrimaryContainer,
-                                          size: 22,
-                                        ),
-                                        onPressed: _sendMessage,
-                                      ),
-                                    )
-                                    : Padding(
-                                      padding: const EdgeInsets.all(6),
-                                      child: IconButton.filledTonal(
-                                        style: IconButton.styleFrom(
-                                          backgroundColor:
-                                              Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerHighest,
-                                          padding: const EdgeInsets.all(12),
-                                        ),
-                                        color:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                        icon: Icon(Icons.qr_code_scanner_sharp),
-                                        onPressed: () async {
-                                          Navigator.of(
+                                : Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: IconButton.filledTonal(
+                                    icon: Icon(
+                                      Icons.send_rounded,
+                                      color:
+                                          Theme.of(
                                             context,
-                                          ).pushNamed(routes.scanQr);
-                                        },
-                                      ),
-                                    )),
+                                          ).colorScheme.onPrimaryContainer,
+                                      size: 22,
+                                    ),
+                                    onPressed: _sendMessage,
+                                  ),
+                                ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),

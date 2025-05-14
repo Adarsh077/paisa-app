@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_upi_india/flutter_upi_india.dart';
 
 class MakePaymentScreen extends StatefulWidget {
   final Map<String, String> data;
@@ -75,23 +74,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
       ),
       backgroundColor: colorScheme.surfaceContainerLowest,
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final List<ApplicationMeta> appMetaList =
-              await UpiPay.getInstalledUpiApplications(
-                statusType: UpiApplicationDiscoveryAppStatusType.all,
-              );
-          await UpiPay.initiateTransaction(
-            amount: amountController.text,
-            app: appMetaList.first.upiApplication,
-            receiverName: widget.data['name'] ?? '',
-            receiverUpiAddress: widget.data['upiId'] ?? '',
-            transactionRef: widget.data['transactionReferenceId'] ?? '',
-            transactionNote: descriptionController.text,
-            merchantCode: widget.data['merchantCode'] ?? '',
-            url: widget.data['transactionUrl'] ?? '',
-          );
-          Navigator.of(context).pop();
-        },
+        onPressed: () async {},
         backgroundColor: colorScheme.primary,
         elevation: 3,
         child: Icon(Icons.send, color: colorScheme.onPrimary),
