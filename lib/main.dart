@@ -50,26 +50,9 @@ class MainApp extends StatelessWidget {
           ),
           themeMode: ThemeMode.system,
           initialRoute: routes.initalRoute,
-          onGenerateRoute: (RouteSettings settings) {
-            var appRoutes = <String, WidgetBuilder>{
-              routes.home: (context) => const TransactionsScreen(),
-              routes.agent: (context) => const AgentScreen(),
-            };
-            WidgetBuilder builder =
-                appRoutes[settings.name] ??
-                (context) {
-                  return Scaffold(
-                    body: Center(
-                      child: Text(
-                        'No route defined for ${settings.name}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  );
-                };
-            return MaterialPageRoute(builder: (ctx) => builder(ctx));
+          routes: {
+            routes.home: (context) => const TransactionsScreen(),
+            routes.agent: (context) => const AgentScreen(),
           },
         );
       },

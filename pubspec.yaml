@@ -1,7 +1,7 @@
 name: paisa_app
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 0.0.1+2
 
 environment:
   sdk: ^3.7.2
@@ -13,6 +13,7 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.3.0
   flutter_launcher_icons: ^0.14.3
+  markdown_widget: ^2.3.2+8
 
 dev_dependencies:
   flutter_test:

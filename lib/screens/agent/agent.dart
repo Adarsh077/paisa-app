@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'agent.service.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key});
@@ -19,23 +20,13 @@ class _AgentScreenState extends State<AgentScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      _messages.add({'role': 'user', 'text': text});
+      _messages.add({'role': 'user', 'content': text});
       _isLoading = true;
       _cancelRequested = false;
       _controller.clear();
     });
     try {
-      final response = await _agentService.chat(
-        _messages
-            .where((msg) => msg['role'] == 'user' || msg['role'] == 'agent')
-            .map(
-              (msg) => {
-                'role': msg['role'] == 'user' ? 'user' : 'assistant',
-                'content': msg['text'] ?? '',
-              },
-            )
-            .toList(),
-      );
+      final response = await _agentService.chat(_messages);
       if (_cancelRequested) {
         setState(() {
           _isLoading = false;
@@ -43,7 +34,7 @@ class _AgentScreenState extends State<AgentScreen> {
         return;
       }
       setState(() {
-        _messages.add({'role': 'agent', 'text': response['content'] ?? ''});
+        _messages.add(response);
         _isLoading = false;
       });
     } catch (e) {
@@ -55,8 +46,8 @@ class _AgentScreenState extends State<AgentScreen> {
       }
       setState(() {
         _messages.add({
-          'role': 'agent',
-          'text': 'Sorry, something went wrong.',
+          'role': 'assistant',
+          'content': 'Sorry, something went wrong.',
         });
         _isLoading = false;
       });
@@ -157,8 +148,8 @@ class _AgentScreenState extends State<AgentScreen> {
                                     : Alignment.centerLeft,
                             child: Container(
                               margin: const EdgeInsets.symmetric(vertical: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isUser ? 10 : 8,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
@@ -170,19 +161,34 @@ class _AgentScreenState extends State<AgentScreen> {
                                         : Colors.transparent,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
-                                msg['text']!,
-                                style: TextStyle(
-                                  color:
-                                      isUser
-                                          ? Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimaryContainer
-                                          : Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                ),
-                              ),
+                              child:
+                                  isUser
+                                      ? Text(
+                                        msg['content']!,
+                                        style: TextStyle(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimaryContainer,
+                                        ),
+                                      )
+                                      : MarkdownWidget(
+                                        data: msg['content']!,
+                                        shrinkWrap: true,
+                                        config: MarkdownConfig.defaultConfig
+                                            .copy(
+                                              configs: [
+                                                PConfig(
+                                                  textStyle: TextStyle(
+                                                    color:
+                                                        Theme.of(
+                                                          context,
+                                                        ).colorScheme.onSurface,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                      ),
                             ),
                           );
                         },
