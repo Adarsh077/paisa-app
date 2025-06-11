@@ -51,7 +51,7 @@ class MainApp extends StatelessWidget {
           themeMode: ThemeMode.system,
           initialRoute: routes.initalRoute,
           routes: {
-            routes.home: (context) => const TransactionsScreen(),
+            routes.transactions: (context) => const TransactionsScreen(),
             routes.agent: (context) => const AgentScreen(),
           },
         );
