@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:paisa_app/screens/transactions/transactions_overview.dart';
-import '../../routes.dart' as routes;
 import 'package:paisa_app/screens/transactions/transactions.service.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -140,7 +139,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text('Paisa')),
+      appBar: AppBar(title: const Text('Transactions')),
       body: RefreshIndicator(
         onRefresh: _refreshTransactions,
         child:
@@ -243,12 +242,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ),
                   ],
                 ),
-      ),
-      floatingActionButton: FloatingActionButton.large(
-        onPressed: () {
-          Navigator.of(context).pushNamed(routes.agent);
-        },
-        child: const Icon(Icons.smart_toy), // Changed to AI/robot icon
       ),
     );
   }
