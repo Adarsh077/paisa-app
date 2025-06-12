@@ -12,9 +12,22 @@ class AgentScreen extends StatefulWidget {
 class _AgentScreenState extends State<AgentScreen> {
   final List<Map<String, String>> _messages = [];
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final AgentService _agentService = AgentService();
   bool _isLoading = false;
   bool _cancelRequested = false;
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
@@ -25,6 +38,7 @@ class _AgentScreenState extends State<AgentScreen> {
       _cancelRequested = false;
       _controller.clear();
     });
+    _scrollToBottom();
     try {
       final response = await _agentService.chat(_messages);
       if (_cancelRequested) {
@@ -37,7 +51,9 @@ class _AgentScreenState extends State<AgentScreen> {
         _messages.add(response);
         _isLoading = false;
       });
+      _scrollToBottom();
     } catch (e) {
+      print(e);
       if (_cancelRequested) {
         setState(() {
           _isLoading = false;
@@ -51,6 +67,7 @@ class _AgentScreenState extends State<AgentScreen> {
         });
         _isLoading = false;
       });
+      _scrollToBottom();
     }
   }
 
@@ -59,6 +76,13 @@ class _AgentScreenState extends State<AgentScreen> {
       _cancelRequested = true;
       _isLoading = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -109,6 +133,7 @@ class _AgentScreenState extends State<AgentScreen> {
                         ),
                       )
                       : ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.all(14),
                         itemCount: _messages.length + (_isLoading ? 1 : 0),
                         itemBuilder: (context, index) {

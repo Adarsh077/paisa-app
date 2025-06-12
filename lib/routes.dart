@@ -3,4 +3,4 @@ const scanQr = '/scan-qr';
 const pay = '/pay';
 const agent = '/agent';
 
-const initalRoute = transactions;
+const initalRoute = agent;
