@@ -3,8 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:paisa_app/screens/index.dart';
 import './routes.dart' as routes;
 import 'package:dynamic_color/dynamic_color.dart';
+import 'background_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
+
   runApp(const MainApp());
 }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'agent.service.dart';
 import 'agent_messages.dart';
 import 'agent_input.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key});
@@ -18,6 +20,12 @@ class _AgentScreenState extends State<AgentScreen> {
   bool _isLoading = false;
   bool _cancelRequested = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _getPermission();
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -28,6 +36,22 @@ class _AgentScreenState extends State<AgentScreen> {
         );
       }
     });
+  }
+
+  Future<bool> _getPermission() async {
+    if (await Permission.sms.status != PermissionStatus.granted) {
+      await Permission.sms.request();
+    }
+
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+
+    return true;
   }
 
   Future<void> _sendMessage([String? message]) async {
