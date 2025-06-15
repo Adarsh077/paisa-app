@@ -7,7 +7,14 @@ import 'background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeService();
+
+  try {
+    await initializeService();
+    print('Background service initialized successfully');
+  } catch (e) {
+    print('Failed to initialize background service: $e');
+    // Continue app startup even if background service fails
+  }
 
   runApp(const MainApp());
 }

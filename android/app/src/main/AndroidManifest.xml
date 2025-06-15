@@ -1,8 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Background service permissions -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <!-- SMS permissions -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    
+    <!-- Notification permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Boot receiver permission -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Battery optimization permissions -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
 
     <application
@@ -40,9 +53,22 @@
         
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:foregroundServiceType="specialUse"
+            android:exported="true"
             android:stopWithTask="false"
         />
+        
+        <!-- Boot receiver -->
+        <receiver
+            android:name="id.flutter.flutter_background_service.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
         
     </application>
     <!-- Required to query activities that can process text, see:

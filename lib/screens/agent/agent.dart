@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:paisa_app/background_service.dart';
 import 'agent.service.dart';
 import 'agent_messages.dart';
 import 'agent_input.dart';
@@ -50,6 +51,7 @@ class _AgentScreenState extends State<AgentScreen> {
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.requestNotificationsPermission();
+    showNotification('testing notification');
 
     return true;
   }
