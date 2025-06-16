@@ -3,18 +3,31 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:paisa_app/screens/index.dart';
 import './routes.dart' as routes;
 import 'package:dynamic_color/dynamic_color.dart';
-import 'background_service.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await initializeService();
-    print('Background service initialized successfully');
-  } catch (e) {
-    print('Failed to initialize background service: $e');
-    // Continue app startup even if background service fails
-  }
+  await FlutterLogs.initLogs(
+    logLevelsEnabled: [
+      LogLevel.INFO,
+      LogLevel.WARNING,
+      LogLevel.ERROR,
+      LogLevel.SEVERE,
+    ],
+    timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+    directoryStructure: DirectoryStructure.FOR_DATE,
+    logTypesEnabled: ["device", "network", "errors"],
+    logFileExtension: LogFileExtension.LOG,
+    logsWriteDirectoryName: "MyLogs",
+    logsExportDirectoryName: "MyLogs/Exported",
+    debugFileOperations: true,
+    isDebuggable: true,
+    logsRetentionPeriodInDays: 14,
+    zipsRetentionPeriodInDays: 3,
+    autoDeleteZipOnExport: false,
+    enabled: true,
+  );
 
   runApp(const MainApp());
 }

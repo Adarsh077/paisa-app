@@ -21,6 +21,7 @@ dependencies:
       url: https://github.com/Ali3Jamous/readsms_plugin.git
       ref: fix-namespace-agp8 # branch name
   flutter_local_notifications: ^19.2.1
+  flutter_logs: ^2.2.1
 
 
 dev_dependencies:

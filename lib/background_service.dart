@@ -5,18 +5,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:readsms/readsms.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 
-void startBackgroundService() {
-  final service = FlutterBackgroundService();
-  service.startService();
-}
-
 Future<void> initializeService() async {
+  FlutterLogs.logThis(
+    tag: 'background-process',
+    subTag: 'permissions',
+    logMessage: 'Initializing background service',
+    level: LogLevel.INFO,
+  );
+
   final service = FlutterBackgroundService();
 
   await service.configure(
@@ -32,16 +35,14 @@ Future<void> initializeService() async {
       autoStartOnBoot: true,
     ),
   );
+  FlutterLogs.logThis(
+    tag: 'background-process',
+    subTag: 'permissions',
+    logMessage: 'Background service configured',
+    level: LogLevel.INFO,
+  );
 
-  if (kDebugMode) {
-    showNotification('Background Service initialized (background-only mode)');
-    print(
-      'Warning: Background-only mode may be limited by Android battery optimization',
-    );
-    print(
-      'For best reliability, consider asking users to disable battery optimization',
-    );
-  }
+  showNotification('Background Service initialized (background-only mode)');
 }
 
 Future<void> showNotification(String message) async {
@@ -62,11 +63,8 @@ Future<void> showNotification(String message) async {
           'sms-agent-notifications',
           'SMS Agent Notifications',
           channelDescription: 'Notifications for SMS expense tracking',
-          importance: Importance.high,
-          priority: Priority.high,
-          showWhen: true,
-          enableVibration: true,
-          enableLights: true,
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
         );
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
@@ -74,18 +72,23 @@ Future<void> showNotification(String message) async {
 
     await flutterLocalNotificationsPlugin.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      'SMS Agent',
       message,
+      "",
       notificationDetails,
     );
   } catch (e) {
+    FlutterLogs.logThis(
+      tag: 'notification',
+      subTag: 'error',
+      logMessage: 'Error showing notification: $e',
+      level: LogLevel.ERROR,
+    );
     if (kDebugMode) {
       print('Error showing notification: $e');
     }
   }
 }
 
-/// Sends a message to the SMS API and returns the response
 Future<Map<String, dynamic>?> sendSmsMessage(String message) async {
   const maxRetries = 3;
   const retryDelay = Duration(seconds: 2);
@@ -103,10 +106,6 @@ Future<Map<String, dynamic>?> sendSmsMessage(String message) async {
           {'role': 'user', 'content': message},
         ],
       });
-
-      if (kDebugMode) {
-        print('Sending SMS to API (attempt $attempt/$maxRetries)');
-      }
 
       final response = await http
           .post(url, headers: headers, body: body)
@@ -165,6 +164,12 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   try {
+    FlutterLogs.logThis(
+      tag: 'background-process',
+      subTag: 'service-start',
+      logMessage: 'Starting background service',
+      level: LogLevel.INFO,
+    );
     // Ensure Flutter binding is initialized
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -175,9 +180,7 @@ void onStart(ServiceInstance service) async {
       }
     });
 
-    if (kDebugMode) {
-      print('Background service started (background-only mode)');
-    }
+    showNotification('Background service started. Initializing...');
 
     // Wait for SMS permission with timeout
     bool hasPermission = false;
@@ -185,7 +188,6 @@ void onStart(ServiceInstance service) async {
     const maxAttempts = 30; // 5 minutes maximum wait
 
     while (!hasPermission && attempts < maxAttempts) {
-      await Future.delayed(const Duration(seconds: 10));
       hasPermission = await Permission.sms.status == PermissionStatus.granted;
       attempts++;
 
@@ -193,6 +195,9 @@ void onStart(ServiceInstance service) async {
         print(
           'Checking SMS permission, attempt: $attempts, granted: $hasPermission',
         );
+      }
+      if (!hasPermission) {
+        await Future.delayed(const Duration(seconds: 10));
       }
     }
 
@@ -204,14 +209,26 @@ void onStart(ServiceInstance service) async {
       return;
     }
 
+    showNotification('Listening for SMS messages...');
+    FlutterLogs.logThis(
+      tag: 'background-process',
+      subTag: 'service-start',
+      logMessage: 'Listening for SMS messages....',
+      level: LogLevel.INFO,
+    );
     // Initialize SMS reading
     final plugin = Readsms();
     plugin.read();
 
-    // Listen to SMS stream
     plugin.smsStream.listen(
       (event) async {
         try {
+          FlutterLogs.logThis(
+            tag: 'background-process',
+            subTag: 'sms',
+            logMessage: 'SMS received: ${event.body.substring(0, 50)}...',
+            level: LogLevel.INFO,
+          );
           if (kDebugMode) {
             print('SMS received: ${event.body.substring(0, 50)}...');
           }
@@ -270,7 +287,12 @@ void onStart(ServiceInstance service) async {
         showNotification(errorMsg);
       },
     );
-
+    FlutterLogs.logThis(
+      tag: 'background-process',
+      subTag: 'service-start',
+      logMessage: 'Background service fully initialized and listening for SMS',
+      level: LogLevel.INFO,
+    );
     if (kDebugMode) {
       print('Background service fully initialized and listening for SMS');
     }

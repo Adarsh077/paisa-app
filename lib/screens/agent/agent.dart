@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
 import 'package:paisa_app/background_service.dart';
 import 'agent.service.dart';
 import 'agent_messages.dart';
 import 'agent_input.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AgentScreen extends StatefulWidget {
@@ -40,20 +40,40 @@ class _AgentScreenState extends State<AgentScreen> {
   }
 
   Future<bool> _getPermission() async {
-    if (await Permission.sms.status != PermissionStatus.granted) {
-      await Permission.sms.request();
+    try {
+      FlutterLogs.logThis(
+        tag: 'background-process',
+        subTag: 'permissions',
+        logMessage: 'Requesting permissions for background process',
+        level: LogLevel.INFO,
+      );
+
+      await requestAllPermissions();
+
+      FlutterLogs.logThis(
+        tag: 'background-process',
+        subTag: 'permissions',
+        logMessage: 'Requesting permissions for notifications',
+        level: LogLevel.INFO,
+      );
+
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+
+      showNotification('testing notification');
+
+      await initializeService();
+
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
     }
-
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-    showNotification('testing notification');
-
-    return true;
   }
 
   Future<void> _sendMessage([String? message]) async {
