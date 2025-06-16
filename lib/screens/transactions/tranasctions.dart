@@ -57,6 +57,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      print(e);
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -126,123 +127,256 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     });
   }
 
-  Future<void> _refreshTransactions() async {
-    setState(() {
-      _allTransactions.clear();
-      _nextCursor = null;
-      _hasMore = true;
-    });
-    await _loadInitialTransactions();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text('Transactions')),
-      body: RefreshIndicator(
-        onRefresh: _refreshTransactions,
-        child:
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _hasError
-                ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Failed to load transactions'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadInitialTransactions,
-                        child: const Text('Retry'),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text('Transactions'),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          const TransactionsOverview(),
+          const SizedBox(height: 8),
+          Expanded(
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _hasError
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load transactions',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: _loadInitialTransactions,
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-                : _allTransactions.isEmpty
-                ? const Center(child: Text('No transactions found.'))
-                : Column(
-                  children: [
-                    const TransactionsOverview(),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount:
-                            _allTransactions.length + (_isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _allTransactions.length) {
-                            // Loading indicator at the bottom
-                            return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-
-                          final dateGroup = _allTransactions[index];
-                          final date = dateGroup['date'];
-                          final transactions = dateGroup['transactions'];
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                  horizontal: 16.0,
-                                ),
-                                width: double.infinity,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainer,
-                                child: Text(
-                                  date,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleSmall?.copyWith(
-                                    color:
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
+                    )
+                    : _allTransactions.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: colorScheme.onSurface.withOpacity(0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No transactions found',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      itemCount:
+                          _allTransactions.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _allTransactions.length) {
+                          return Container(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.primary,
                               ),
-                              ...transactions.map(
-                                (txn) => ListTile(
-                                  title: Text(
-                                    txn['label']!,
-                                    style: TextStyle(
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  trailing: Text(
-                                    txn['type'] == 'income'
-                                        ? txn['amount']!
-                                        : '-${txn['amount']!}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color:
-                                          txn['type'] == 'income'
-                                              ? Colors.green
-                                              : Theme.of(
-                                                context,
-                                              ).colorScheme.error,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           );
-                        },
-                      ),
+                        }
+
+                        final dateGroup = _allTransactions[index];
+                        final date = dateGroup['date'];
+                        final transactions = dateGroup['transactions'];
+
+                        return _buildDateGroup(context, date, transactions);
+                      },
                     ),
-                  ],
-                ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildDateGroup(
+    BuildContext context,
+    String date,
+    List<dynamic> transactions,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Text(
+              _formatDate(date),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children:
+                  transactions.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final txn = entry.value;
+                    final isLast = index == transactions.length - 1;
+
+                    return _buildTransactionItem(context, txn, isLast);
+                  }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(
+    BuildContext context,
+    Map<String, dynamic> txn,
+    bool isLast,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isIncome = txn['type'] == 'income';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        border:
+            isLast
+                ? null
+                : Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outline.withOpacity(0.1),
+                    width: 0.5,
+                  ),
+                ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color:
+                  isIncome
+                      ? Colors.green.withOpacity(0.1)
+                      : colorScheme.error.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+              color: isIncome ? Colors.green : colorScheme.error,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  txn['label']!,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                if (txn['category'] != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    txn['category']!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            isIncome ? txn['amount']! : '-${txn['amount']!}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isIncome ? Colors.green : colorScheme.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final dateOnly = DateTime(date.year, date.month, date.day);
+
+      if (dateOnly == today) {
+        return 'Today';
+      } else if (dateOnly == yesterday) {
+        return 'Yesterday';
+      } else {
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
+        return '${date.day} ${months[date.month - 1]}, ${date.year}';
+      }
+    } catch (e) {
+      return dateStr;
+    }
   }
 }
