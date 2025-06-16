@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:paisa_app/screens/transactions/transactions_overview.dart';
 import 'package:paisa_app/screens/transactions/transactions.service.dart';
+import 'package:paisa_app/screens/transactions/voice_assistant_bar.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -140,83 +141,103 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          const TransactionsOverview(),
-          const SizedBox(height: 8),
-          Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _hasError
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Failed to load transactions',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: _loadInitialTransactions,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                    : _allTransactions.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: colorScheme.onSurface.withOpacity(0.3),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No transactions found',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      controller: _scrollController,
-                      itemCount:
-                          _allTransactions.length + (_isLoadingMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _allTransactions.length) {
-                          return Container(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.primary,
+          Column(
+            children: [
+              const TransactionsOverview(),
+              const SizedBox(height: 8),
+              Expanded(
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _hasError
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: colorScheme.error,
                               ),
-                            ),
-                          );
-                        }
+                              const SizedBox(height: 16),
+                              Text(
+                                'Failed to load transactions',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton(
+                                onPressed: _loadInitialTransactions,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                        : _allTransactions.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 64,
+                                color: colorScheme.onSurface.withOpacity(0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No transactions found',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          controller: _scrollController,
+                          itemCount:
+                              _allTransactions.length +
+                              (_isLoadingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _allTransactions.length) {
+                              return Container(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              );
+                            }
 
-                        final dateGroup = _allTransactions[index];
-                        final date = dateGroup['date'];
-                        final transactions = dateGroup['transactions'];
+                            final dateGroup = _allTransactions[index];
+                            final date = dateGroup['date'];
+                            final transactions = dateGroup['transactions'];
 
-                        return _buildDateGroup(context, date, transactions);
-                      },
-                    ),
+                            return _buildDateGroup(context, date, transactions);
+                          },
+                        ),
+              ),
+            ],
+          ),
+          // Floating Voice Assistant Bar
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 24,
+            child: VoiceAssistantBar(
+              onSpeechResult: (String result) {
+                print('Speech result received: $result');
+              },
+              onChatComplete: () {
+                // Refresh transactions after chat is complete
+                _loadInitialTransactions();
+              },
+            ),
           ),
         ],
       ),
