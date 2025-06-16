@@ -65,8 +65,6 @@ class _AgentScreenState extends State<AgentScreen> {
           >()
           ?.requestNotificationsPermission();
 
-      showNotification('testing notification');
-
       await initializeService();
 
       return true;

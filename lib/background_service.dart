@@ -41,8 +41,6 @@ Future<void> initializeService() async {
     logMessage: 'Background service configured',
     level: LogLevel.INFO,
   );
-
-  showNotification('Background Service initialized (background-only mode)');
 }
 
 @pragma('vm:entry-point')
@@ -78,9 +76,6 @@ void onStart(ServiceInstance service) async {
     }
 
     if (!hasPermission) {
-      showNotification(
-        'SMS permission not granted. Background service cannot function.',
-      );
       service.stopSelf();
       return;
     }
@@ -135,15 +130,13 @@ void onStart(ServiceInstance service) async {
           } else {
             final unknownStatus =
                 'Unknown response status: ${response['status']}';
-            showNotification(unknownStatus);
+
             if (kDebugMode) {
               print(unknownStatus);
             }
           }
         } catch (e) {
-          final errorMsg = 'Error processing SMS: $e';
-          if (kDebugMode) {}
-          showNotification(errorMsg);
+          print(e);
         }
       },
       onError: (error) {
@@ -151,7 +144,6 @@ void onStart(ServiceInstance service) async {
         if (kDebugMode) {
           print(errorMsg);
         }
-        showNotification(errorMsg);
       },
     );
     FlutterLogs.logThis(
@@ -168,7 +160,6 @@ void onStart(ServiceInstance service) async {
     if (kDebugMode) {
       print(errorMsg);
     }
-    showNotification(errorMsg);
     service.stopSelf();
   }
 }
