@@ -45,13 +45,141 @@ Future<void> initializeService() async {
   showNotification('Background Service initialized (background-only mode)');
 }
 
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  try {
+    FlutterLogs.logInfo(
+      'background_service',
+      'onStart',
+      'Starting background service',
+    );
+
+    WidgetsFlutterBinding.ensureInitialized();
+
+    Timer.periodic(const Duration(minutes: 5), (timer) {
+      FlutterLogs.logInfo(
+        'background_service',
+        'onStart',
+        'Heartbeat at ${DateTime.now()}',
+      );
+    });
+
+    bool hasPermission = false;
+    int attempts = 0;
+    const maxAttempts = 30;
+
+    while (!hasPermission && attempts < maxAttempts) {
+      hasPermission = await Permission.sms.status == PermissionStatus.granted;
+      attempts++;
+
+      if (!hasPermission) {
+        await Future.delayed(const Duration(seconds: 10));
+      }
+    }
+
+    if (!hasPermission) {
+      showNotification(
+        'SMS permission not granted. Background service cannot function.',
+      );
+      service.stopSelf();
+      return;
+    }
+
+    FlutterLogs.logInfo(
+      'background_service',
+      'onStart',
+      'Listening for SMS messages....',
+    );
+    final plugin = Readsms();
+    plugin.read();
+
+    plugin.smsStream.listen(
+      (event) async {
+        try {
+          FlutterLogs.logInfo(
+            'background_service',
+            'smsStream.listen',
+            'SMS received: ${event.body}',
+          );
+
+          final response = await sendSmsMessage(event.body);
+          if (response == null) {
+            FlutterLogs.logError(
+              'background_service',
+              'smsStream.listen',
+              'Failed to get response from SMS API',
+            );
+            return;
+          }
+
+          if (response['status'] == 'skipped') {
+            return;
+          }
+
+          if (response['status'] == 'error') {
+            final errorMessage = response['message'] ?? 'Error processing SMS';
+            FlutterLogs.logError(
+              'background_service',
+              'smsStream.listen',
+              'SMS API error: $errorMessage',
+            );
+            return;
+          }
+
+          if (response['status'] == 'success') {
+            final String message = response['message'] ?? '';
+            showNotification(message);
+            if (kDebugMode) {
+              print('SMS processed successfully: $message');
+            }
+          } else {
+            final unknownStatus =
+                'Unknown response status: ${response['status']}';
+            showNotification(unknownStatus);
+            if (kDebugMode) {
+              print(unknownStatus);
+            }
+          }
+        } catch (e) {
+          final errorMsg = 'Error processing SMS: $e';
+          if (kDebugMode) {}
+          showNotification(errorMsg);
+        }
+      },
+      onError: (error) {
+        final errorMsg = 'SMS stream error: $error';
+        if (kDebugMode) {
+          print(errorMsg);
+        }
+        showNotification(errorMsg);
+      },
+    );
+    FlutterLogs.logThis(
+      tag: 'background-process',
+      subTag: 'service-start',
+      logMessage: 'Background service fully initialized and listening for SMS',
+      level: LogLevel.INFO,
+    );
+    if (kDebugMode) {
+      print('Background service fully initialized and listening for SMS');
+    }
+  } catch (e) {
+    final errorMsg = 'Critical error in background service: $e';
+    if (kDebugMode) {
+      print(errorMsg);
+    }
+    showNotification(errorMsg);
+    service.stopSelf();
+  }
+}
+
 Future<void> showNotification(String message) async {
   try {
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         FlutterLocalNotificationsPlugin();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('icon');
 
     final InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
@@ -149,187 +277,6 @@ Future<Map<String, dynamic>?> sendSmsMessage(String message) async {
   return null;
 }
 
-@pragma('vm:entry-point')
-Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-
-  if (kDebugMode) {
-    print('iOS background service handler called');
-  }
-
-  return true;
-}
-
-@pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
-  try {
-    FlutterLogs.logThis(
-      tag: 'background-process',
-      subTag: 'service-start',
-      logMessage: 'Starting background service',
-      level: LogLevel.INFO,
-    );
-    // Ensure Flutter binding is initialized
-    WidgetsFlutterBinding.ensureInitialized();
-
-    // Send periodic heartbeat to prevent service from being killed
-    Timer.periodic(const Duration(minutes: 5), (timer) {
-      if (kDebugMode) {
-        print('Background service heartbeat: ${DateTime.now()}');
-      }
-    });
-
-    showNotification('Background service started. Initializing...');
-
-    // Wait for SMS permission with timeout
-    bool hasPermission = false;
-    int attempts = 0;
-    const maxAttempts = 30; // 5 minutes maximum wait
-
-    while (!hasPermission && attempts < maxAttempts) {
-      hasPermission = await Permission.sms.status == PermissionStatus.granted;
-      attempts++;
-
-      if (kDebugMode) {
-        print(
-          'Checking SMS permission, attempt: $attempts, granted: $hasPermission',
-        );
-      }
-      if (!hasPermission) {
-        await Future.delayed(const Duration(seconds: 10));
-      }
-    }
-
-    if (!hasPermission) {
-      showNotification(
-        'SMS permission not granted. Background service cannot function.',
-      );
-      service.stopSelf();
-      return;
-    }
-
-    showNotification('Listening for SMS messages...');
-    FlutterLogs.logThis(
-      tag: 'background-process',
-      subTag: 'service-start',
-      logMessage: 'Listening for SMS messages....',
-      level: LogLevel.INFO,
-    );
-    // Initialize SMS reading
-    final plugin = Readsms();
-    plugin.read();
-
-    plugin.smsStream.listen(
-      (event) async {
-        try {
-          FlutterLogs.logThis(
-            tag: 'background-process',
-            subTag: 'sms',
-            logMessage: 'SMS received: ${event.body.substring(0, 50)}...',
-            level: LogLevel.INFO,
-          );
-          if (kDebugMode) {
-            print('SMS received: ${event.body.substring(0, 50)}...');
-          }
-
-          final response = await sendSmsMessage(event.body);
-          if (response == null) {
-            if (kDebugMode) {
-              print('No response from SMS API');
-            }
-            return;
-          }
-
-          if (response['status'] == 'skipped') {
-            if (kDebugMode) {
-              print('SMS skipped by API');
-            }
-            return;
-          }
-
-          if (response['status'] == 'error') {
-            final errorMessage = response['message'] ?? 'Error processing SMS';
-            showNotification(errorMessage);
-            if (kDebugMode) {
-              print('SMS API error: $errorMessage');
-            }
-            return;
-          }
-
-          if (response['status'] == 'success') {
-            final String message = response['message'] ?? '';
-            showNotification(message);
-            if (kDebugMode) {
-              print('SMS processed successfully: $message');
-            }
-          } else {
-            final unknownStatus =
-                'Unknown response status: ${response['status']}';
-            showNotification(unknownStatus);
-            if (kDebugMode) {
-              print(unknownStatus);
-            }
-          }
-        } catch (e) {
-          final errorMsg = 'Error processing SMS: $e';
-          if (kDebugMode) {
-            print(errorMsg);
-          }
-          showNotification(errorMsg);
-        }
-      },
-      onError: (error) {
-        final errorMsg = 'SMS stream error: $error';
-        if (kDebugMode) {
-          print(errorMsg);
-        }
-        showNotification(errorMsg);
-      },
-    );
-    FlutterLogs.logThis(
-      tag: 'background-process',
-      subTag: 'service-start',
-      logMessage: 'Background service fully initialized and listening for SMS',
-      level: LogLevel.INFO,
-    );
-    if (kDebugMode) {
-      print('Background service fully initialized and listening for SMS');
-    }
-  } catch (e) {
-    final errorMsg = 'Critical error in background service: $e';
-    if (kDebugMode) {
-      print(errorMsg);
-    }
-    showNotification(errorMsg);
-    service.stopSelf();
-  }
-}
-
-/// Check if the background service is running
-Future<bool> isBackgroundServiceRunning() async {
-  final service = FlutterBackgroundService();
-  return await service.isRunning();
-}
-
-/// Get background service status information
-Future<Map<String, dynamic>> getBackgroundServiceStatus() async {
-  final service = FlutterBackgroundService();
-  final isRunning = await service.isRunning();
-  final hasSmsPermission =
-      await Permission.sms.status == PermissionStatus.granted;
-  final hasNotificationPermission =
-      await Permission.notification.status == PermissionStatus.granted;
-
-  return {
-    'isRunning': isRunning,
-    'hasSmsPermission': hasSmsPermission,
-    'hasNotificationPermission': hasNotificationPermission,
-    'timestamp': DateTime.now().toIso8601String(),
-  };
-}
-
-/// Request all necessary permissions for the background service
 Future<Map<String, bool>> requestAllPermissions() async {
   final permissions = [
     Permission.sms,
@@ -354,32 +301,14 @@ Future<Map<String, bool>> requestAllPermissions() async {
   return results;
 }
 
-/// Restart the background service
-Future<void> restartBackgroundService() async {
-  final service = FlutterBackgroundService();
-
-  // Stop the service if it's running
-  if (await service.isRunning()) {
-    service.invoke("stop");
-    await Future.delayed(const Duration(seconds: 2));
-  }
-
-  // Start the service
-  service.startService();
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
 
   if (kDebugMode) {
-    showNotification('Background service restarted');
+    print('iOS background service handler called');
   }
-}
 
-/// Check if device has battery optimization restrictions
-Future<bool> isBatteryOptimizationDisabled() async {
-  return await Permission.ignoreBatteryOptimizations.status ==
-      PermissionStatus.granted;
-}
-
-/// Request to disable battery optimization for better background execution
-Future<bool> requestDisableBatteryOptimization() async {
-  final status = await Permission.ignoreBatteryOptimizations.request();
-  return status == PermissionStatus.granted;
+  return true;
 }
