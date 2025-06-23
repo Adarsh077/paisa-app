@@ -82,16 +82,16 @@ class _VoiceAssistantBarState extends State<VoiceAssistantBar> {
 
     try {
       final messages = [
-        {"role": "user", "content": message}
+        {"role": "user", "content": message},
       ];
-      
+
       await _agentService.chat(messages);
-      
+
       if (mounted) {
         setState(() {
           _isProcessing = false;
         });
-        
+
         // Call the refresh callback if provided
         widget.onChatComplete?.call();
       }
@@ -101,7 +101,7 @@ class _VoiceAssistantBarState extends State<VoiceAssistantBar> {
         setState(() {
           _isProcessing = false;
         });
-        
+
         // Call the refresh callback even on error
         widget.onChatComplete?.call();
       }
@@ -222,7 +222,7 @@ class _VoiceAssistantBarState extends State<VoiceAssistantBar> {
                 GestureDetector(
                   onTap: () {
                     if (_isProcessing) return; // Disable tap when processing
-                    
+
                     if (widget.onMicPressed != null) {
                       widget.onMicPressed!();
                     } else {
@@ -239,25 +239,26 @@ class _VoiceAssistantBarState extends State<VoiceAssistantBar> {
                               : colorScheme.primary.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: _isProcessing
-                        ? Center(
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.primary,
+                    child:
+                        _isProcessing
+                            ? Center(
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colorScheme.primary,
+                                ),
                               ),
+                            )
+                            : Icon(
+                              _isListening ? Icons.stop : Icons.mic,
+                              color:
+                                  _isListening
+                                      ? colorScheme.error
+                                      : colorScheme.primary,
+                              size: 18,
                             ),
-                          )
-                        : Icon(
-                            _isListening ? Icons.stop : Icons.mic,
-                            color:
-                                _isListening
-                                    ? colorScheme.error
-                                    : colorScheme.primary,
-                            size: 18,
-                          ),
                   ),
                 ),
               ],

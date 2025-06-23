@@ -134,12 +134,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
         title: const Text('Transactions'),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       body: Stack(
         children: [
@@ -258,7 +259,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               _formatDate(date),
               style: theme.textTheme.labelLarge?.copyWith(
@@ -271,8 +272,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainer.withOpacity(0.3),
+              color: colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.outline.withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Column(
               children:
@@ -300,7 +305,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final isIncome = txn['type'] == 'income';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border:
             isLast
@@ -315,35 +320,35 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color:
                   isIncome
                       ? Colors.green.withOpacity(0.1)
                       : colorScheme.error.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
               color: isIncome ? Colors.green : colorScheme.error,
-              size: 20,
+              size: 18,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   txn['label']!,
-                  style: theme.textTheme.bodyLarge?.copyWith(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: colorScheme.onSurface,
                   ),
                 ),
                 if (txn['category'] != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     txn['category']!,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -354,10 +359,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Text(
             isIncome ? txn['amount']! : '-${txn['amount']!}',
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: isIncome ? Colors.green : colorScheme.error,
             ),

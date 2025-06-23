@@ -21,7 +21,7 @@ class AgentMessages extends StatelessWidget {
 
     return ListView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       itemCount: messages.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (isLoading && index == messages.length) {
@@ -72,24 +72,15 @@ class AgentMessages extends StatelessWidget {
   }
 
   Widget _buildLoadingIndicator(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
-            ),
-          ),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: colorScheme.primary,
         ),
       ),
     );
@@ -100,43 +91,66 @@ class AgentMessages extends StatelessWidget {
     Map<String, String> msg,
     bool isUser,
   ) {
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: EdgeInsets.symmetric(horizontal: isUser ? 10 : 8, vertical: 8),
-        decoration: BoxDecoration(
-          color:
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding:
               isUser
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+                  ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+                  : EdgeInsets.zero,
+          decoration:
+              isUser
+                  ? BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  )
+                  : null,
+          child:
+              isUser
+                  ? _buildUserMessage(context, msg['content']!)
+                  : _buildAssistantMessage(context, msg['content']!),
         ),
-        child:
-            isUser
-                ? _buildUserMessage(context, msg['content']!)
-                : _buildAssistantMessage(context, msg['content']!),
       ),
     );
   }
 
   Widget _buildUserMessage(BuildContext context, String content) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Text(
       content,
-      style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onPrimaryContainer,
+      ),
     );
   }
 
   Widget _buildAssistantMessage(BuildContext context, String content) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return MarkdownWidget(
       data: content,
       shrinkWrap: true,
       config: MarkdownConfig.defaultConfig.copy(
         configs: [
           PConfig(
-            textStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+            textStyle:
+                theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ) ??
+                TextStyle(color: colorScheme.onSurface),
           ),
         ],
       ),

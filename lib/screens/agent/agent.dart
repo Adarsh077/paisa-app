@@ -158,13 +158,19 @@ class _AgentScreenState extends State<AgentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
         title: const Text('Paisa'),
         automaticallyImplyLeading: false,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: SafeArea(
         child: Column(
           children: [

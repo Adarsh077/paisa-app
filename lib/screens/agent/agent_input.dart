@@ -19,43 +19,48 @@ class AgentInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         AgentSuggestions(onActionExecute: onActionExecute!),
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: controller,
                   autofocus: true,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Message',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.outline,
+                        color: colorScheme.outline.withOpacity(0.5),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(32),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: colorScheme.primary),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 16,
+                      vertical: 12,
                     ),
-                    filled: false,
+                    filled: true,
+                    fillColor: colorScheme.surface,
                     suffixIcon: _buildSuffixIcon(context),
                   ),
                   onSubmitted: (_) => onSendMessage(),
@@ -69,28 +74,40 @@ class AgentInput extends StatelessWidget {
   }
 
   Widget _buildSuffixIcon(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (isLoading) {
       return Padding(
         padding: const EdgeInsets.all(8),
-        child: IconButton.filledTonal(
-          icon: Icon(
-            Icons.stop_rounded,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.error.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-          onPressed: onStopRequest,
+          child: IconButton(
+            icon: Icon(Icons.stop_rounded, color: colorScheme.error, size: 18),
+            onPressed: onStopRequest,
+          ),
         ),
       );
     }
 
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: IconButton.filledTonal(
-        icon: Icon(
-          Icons.send_rounded,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-          size: 22,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
         ),
-        onPressed: onSendMessage,
+        child: IconButton(
+          icon: Icon(Icons.send_rounded, color: colorScheme.primary, size: 18),
+          onPressed: onSendMessage,
+        ),
       ),
     );
   }
