@@ -1,98 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:paisa_app/screens/transactions/transactions.service.dart';
+import 'package:provider/provider.dart';
+import 'package:paisa_app/screens/transactions/transactions_provider.dart';
 
-class TransactionsOverview extends StatefulWidget {
+class TransactionsOverview extends StatelessWidget {
   const TransactionsOverview({super.key});
-
-  @override
-  State<TransactionsOverview> createState() => _TransactionsOverviewState();
-}
-
-class _TransactionsOverviewState extends State<TransactionsOverview> {
-  int _income = 0;
-  int _expense = 0;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchTotals();
-  }
-
-  Future<void> _fetchTotals() async {
-    try {
-      final data = await TransactionsService().getAllTransactions();
-      int income = 0;
-      int expense = 0;
-      for (final group in data) {
-        for (final txn in group['transactions']) {
-          final amountStr = (txn['amount'] as String).replaceAll(
-            RegExp(r'[^0-9]'),
-            '',
-          );
-          final amount = int.tryParse(amountStr) ?? 0;
-          if (txn['type'] == 'income') {
-            income += amount;
-          } else if (txn['type'] == 'expense') {
-            expense += amount;
-          }
-        }
-      }
-      setState(() {
-        _income = income;
-        _expense = expense;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _loading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child:
-          _loading
-              ? Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colorScheme.primary,
-                ),
-              )
-              : Column(
-                children: [
-                  const SizedBox(height: 8),
-                  Row(
+    return Consumer<TransactionsProvider>(
+      builder: (context, transactionsProvider, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child:
+              transactionsProvider.isLoading
+                  ? Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary,
+                    ),
+                  )
+                  : Column(
                     children: [
-                      Expanded(
-                        child: _buildSummaryCard(
-                          context,
-                          'Total Income',
-                          '₹${_formatAmount(_income)}',
-                          Colors.green,
-                          Icons.trending_up,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildSummaryCard(
-                          context,
-                          'Total Expense',
-                          '₹${_formatAmount(_expense)}',
-                          colorScheme.error,
-                          Icons.trending_down,
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSummaryCard(
+                              context,
+                              'Total Income',
+                              '₹${_formatAmount(transactionsProvider.totalIncome)}',
+                              Colors.green,
+                              Icons.trending_up,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildSummaryCard(
+                              context,
+                              'Total Expense',
+                              '₹${_formatAmount(transactionsProvider.totalExpense)}',
+                              colorScheme.error,
+                              Icons.trending_down,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+        );
+      },
     );
   }
 

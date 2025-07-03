@@ -1,37 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import 'package:provider/provider.dart';
+import 'agent_provider.dart';
 
 class AgentMessages extends StatelessWidget {
-  final List<Map<String, String>> messages;
   final ScrollController scrollController;
-  final bool isLoading;
 
-  const AgentMessages({
-    super.key,
-    required this.messages,
-    required this.scrollController,
-    required this.isLoading,
-  });
+  const AgentMessages({super.key, required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
-    if (messages.isEmpty) {
-      return _buildWelcomeMessage(context);
-    }
-
-    return ListView.builder(
-      controller: scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: messages.length + (isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (isLoading && index == messages.length) {
-          return _buildLoadingIndicator(context);
+    return Consumer<AgentProvider>(
+      builder: (context, agentProvider, child) {
+        if (agentProvider.messages.isEmpty) {
+          return _buildWelcomeMessage(context);
         }
 
-        final msg = messages[index];
-        final isUser = msg['role'] == 'user';
+        return ListView.builder(
+          controller: scrollController,
+          padding: const EdgeInsets.all(16),
+          itemCount:
+              agentProvider.messages.length + (agentProvider.isLoading ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (agentProvider.isLoading &&
+                index == agentProvider.messages.length) {
+              return _buildLoadingIndicator(context);
+            }
 
-        return _buildMessageBubble(context, msg, isUser);
+            final msg = agentProvider.messages[index];
+            final isUser = msg['role'] == 'user';
+
+            return _buildMessageBubble(context, msg, isUser);
+          },
+        );
       },
     );
   }
@@ -75,14 +76,31 @@ class AgentMessages extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: colorScheme.primary,
+    return Row(
+      children: [
+        SizedBox(
+          width: 32,
+          height: 32,
+          child: Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Text(
+          'Just a second...',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

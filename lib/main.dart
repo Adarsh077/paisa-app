@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:paisa_app/screens/index.dart';
+import 'package:provider/provider.dart';
+import 'package:paisa_app/screens/agent/agent_provider.dart';
 import './routes.dart' as routes;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -60,23 +62,33 @@ class MainApp extends StatelessWidget {
           Brightness.dark,
         );
 
-        return MaterialApp(
-          theme: ThemeData(
-            colorScheme: lightScheme,
-            useMaterial3: true,
-            textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => AgentProvider()),
+            ChangeNotifierProvider(create: (context) => TransactionsProvider()),
+          ],
+          child: MaterialApp(
+            theme: ThemeData(
+              colorScheme: lightScheme,
+              useMaterial3: true,
+              textTheme: GoogleFonts.robotoTextTheme(
+                Theme.of(context).textTheme,
+              ),
+            ),
+            darkTheme: ThemeData(
+              colorScheme: darkScheme,
+              useMaterial3: true,
+              textTheme: GoogleFonts.robotoTextTheme(
+                Theme.of(context).textTheme,
+              ),
+            ),
+            themeMode: ThemeMode.system,
+            initialRoute: routes.initalRoute,
+            routes: {
+              routes.transactions: (context) => const TransactionsScreen(),
+              routes.agent: (context) => const AgentScreen(),
+            },
           ),
-          darkTheme: ThemeData(
-            colorScheme: darkScheme,
-            useMaterial3: true,
-            textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
-          ),
-          themeMode: ThemeMode.system,
-          initialRoute: routes.initalRoute,
-          routes: {
-            routes.transactions: (context) => const TransactionsScreen(),
-            routes.agent: (context) => const AgentScreen(),
-          },
         );
       },
     );

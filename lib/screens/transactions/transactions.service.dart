@@ -71,6 +71,7 @@ class TransactionsService {
         'label': txn['label'] ?? '',
         'amount': '₹${txn['amount']}',
         'type': txn['type'] ?? '',
+        'tags': txn['tags'] ?? [],
       });
     }
 
