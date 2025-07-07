@@ -57,12 +57,11 @@ class _SuggestionChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(16),
+            color: colorScheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: colorScheme.outline.withOpacity(0.3),
               width: 1,
@@ -70,7 +69,7 @@ class _SuggestionChip extends StatelessWidget {
           ),
           child: Text(
             title,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w500,
               color: colorScheme.onSurface,
             ),

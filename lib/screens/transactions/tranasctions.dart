@@ -11,14 +11,28 @@ class TransactionsScreen extends StatefulWidget {
   State<TransactionsScreen> createState() => _TransactionsScreenState();
 }
 
-class _TransactionsScreenState extends State<TransactionsScreen> {
+class _TransactionsScreenState extends State<TransactionsScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
+  late AnimationController _fabAnimationController;
+  late Animation<Offset> _fabOffsetAnimation;
+  double _lastOffset = 0;
+  bool _fabVisible = true;
 
   @override
   void initState() {
     super.initState();
+    _fabAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _fabOffsetAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, 2),
+    ).animate(
+      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
+    );
     _scrollController.addListener(_onScroll);
-    // Load initial transactions will be called from the provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TransactionsProvider>().loadInitialTransactions();
     });
@@ -27,10 +41,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _fabAnimationController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
+    // Auto-hide FAB logic
+    final offset = _scrollController.position.pixels;
+    if (offset > _lastOffset + 5 && _fabVisible) {
+      // Scrolling down
+      _fabVisible = false;
+      _fabAnimationController.forward();
+    } else if (offset < _lastOffset - 5 && !_fabVisible) {
+      // Scrolling up
+      _fabVisible = true;
+      _fabAnimationController.reverse();
+    }
+    _lastOffset = offset;
+
+    // Existing load more logic
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       context.read<TransactionsProvider>().loadMoreTransactions().catchError((
@@ -122,7 +151,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 ),
                               )
                               : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 80),
                                 controller: _scrollController,
                                 itemCount:
                                     transactionsProvider
@@ -173,12 +201,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ),
                   ],
                 ),
-                // Floating Voice Assistant Bar
+                // Floating Voice Assistant Bar with auto-hide
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 16,
-                  child: const AgentBar(standalone: true),
+                  child: SlideTransition(
+                    position: _fabOffsetAnimation,
+                    child: const AgentBar(standalone: true),
+                  ),
                 ),
               ],
             ),

@@ -36,7 +36,6 @@ class AgentBar extends StatelessWidget {
                       ),
                       child: TextField(
                         controller: agentProvider.controller,
-                        autofocus: true,
                         enabled: !agentProvider.isLoading,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurface,
