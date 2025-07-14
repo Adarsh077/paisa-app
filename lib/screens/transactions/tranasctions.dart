@@ -89,118 +89,98 @@ class _TransactionsScreenState extends State<TransactionsScreen>
             bottom: false,
             child: Stack(
               children: [
-                Column(
-                  children: [
-                    const TransactionsOverview(),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child:
-                          transactionsProvider.isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : transactionsProvider.hasError
-                              ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      size: 48,
-                                      color: colorScheme.error,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Failed to load transactions',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            color: colorScheme.onSurface,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    FilledButton(
-                                      onPressed:
-                                          () =>
-                                              transactionsProvider
-                                                  .loadInitialTransactions(),
-                                      child: const Text('Retry'),
-                                    ),
-                                  ],
-                                ),
-                              )
-                              : transactionsProvider.allTransactions.isEmpty
-                              ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.receipt_long_outlined,
-                                      size: 64,
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.3,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'No transactions found',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            color: colorScheme.onSurface
-                                                .withOpacity(0.7),
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                              : ListView.builder(
-                                controller: _scrollController,
-                                itemCount:
+                // Make the overview scroll with the list
+                transactionsProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : transactionsProvider.hasError
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load transactions',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed:
+                                () =>
                                     transactionsProvider
-                                        .allTransactions
-                                        .length +
-                                    (transactionsProvider.isLoadingMore
-                                        ? 2
-                                        : 1),
-                                itemBuilder: (context, index) {
-                                  if (index ==
-                                      transactionsProvider
-                                          .allTransactions
-                                          .length) {
-                                    return transactionsProvider.isLoadingMore
-                                        ? Container(
-                                          padding: const EdgeInsets.all(24.0),
-                                          child: Center(
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: colorScheme.primary,
-                                            ),
-                                          ),
-                                        )
-                                        : SizedBox(height: 100);
-                                  }
-                                  if (index ==
-                                      transactionsProvider
-                                              .allTransactions
-                                              .length +
-                                          1) {
-                                    return SizedBox(height: 100);
-                                  }
-
-                                  final dateGroup =
-                                      transactionsProvider
-                                          .allTransactions[index];
-                                  final date = dateGroup['date'];
-                                  final transactions =
-                                      dateGroup['transactions'];
-
-                                  return _buildDateGroup(
-                                    context,
-                                    date,
-                                    transactions,
-                                  );
-                                },
-                              ),
+                                        .loadInitialTransactions(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                    : transactionsProvider.allTransactions.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: colorScheme.onSurface.withOpacity(0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No transactions found',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      itemCount:
+                          transactionsProvider.allTransactions.length +
+                          (transactionsProvider.isLoadingMore ? 2 : 1),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          // Overview at the top
+                          return Column(
+                            children: [
+                              const TransactionsOverview(),
+                              const SizedBox(height: 8),
+                            ],
+                          );
+                        }
+                        final txIndex = index - 1;
+                        if (txIndex ==
+                            transactionsProvider.allTransactions.length) {
+                          return transactionsProvider.isLoadingMore
+                              ? Container(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                              : SizedBox(height: 100);
+                        }
+                        if (txIndex ==
+                            transactionsProvider.allTransactions.length + 1) {
+                          return SizedBox(height: 100);
+                        }
+                        final dateGroup =
+                            transactionsProvider.allTransactions[txIndex];
+                        final date = dateGroup['date'];
+                        final transactions = dateGroup['transactions'];
+                        return _buildDateGroup(context, date, transactions);
+                      },
                     ),
-                  ],
-                ),
                 // Floating Voice Assistant Bar with auto-hide
                 Positioned(
                   left: 0,
