@@ -57,15 +57,19 @@ class TransactionsProvider extends ChangeNotifier {
   }
 
   // Load initial transactions
-  Future<void> loadInitialTransactions() async {
+  Future<void> loadInitialTransactions(Map<String, dynamic>? args) async {
     if (_isLoading) return;
 
     _isLoading = true;
     _hasError = false;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
 
     try {
-      final response = await _transactionsService.getTransactions();
+      final response = await _transactionsService.getTransactions(
+        filters: args,
+      );
       _allTransactions = response.transactions;
       _nextCursor = response.pagination.nextCursor;
       _hasMore = response.pagination.hasNext;
@@ -80,7 +84,7 @@ class TransactionsProvider extends ChangeNotifier {
   }
 
   // Load more transactions for pagination
-  Future<void> loadMoreTransactions() async {
+  Future<void> loadMoreTransactions(Map<String, dynamic>? args) async {
     if (_isLoadingMore || !_hasMore || _nextCursor == null) return;
 
     _isLoadingMore = true;
@@ -89,6 +93,7 @@ class TransactionsProvider extends ChangeNotifier {
     try {
       final response = await _transactionsService.getTransactions(
         cursor: _nextCursor,
+        filters: args,
       );
       // Merge new transactions with existing ones
       _mergeTransactions(response.transactions);
@@ -137,12 +142,32 @@ class TransactionsProvider extends ChangeNotifier {
   }
 
   // Refresh transactions (pull to refresh)
-  Future<void> refreshTransactions() async {
-    _allTransactions.clear();
-    _nextCursor = null;
-    _hasMore = true;
-    _hasError = false;
-    await loadInitialTransactions();
+  Future<void> refreshTransactions(Map<String, dynamic>? args) async {
+    // Gather all transaction IDs from current _allTransactions
+    List<String> allIds = [];
+    for (final group in _allTransactions) {
+      for (final txn in group['transactions']) {
+        if (txn.containsKey('_id')) {
+          allIds.add(txn['_id'].toString());
+        }
+      }
+    }
+
+    try {
+      final response = await _transactionsService.getTransactions(
+        filters: {'_ids': allIds},
+      );
+      _allTransactions = response.transactions;
+      _nextCursor = response.pagination.nextCursor;
+      _hasMore = response.pagination.hasNext;
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      print(e);
+      _isLoading = false;
+      _hasError = true;
+      notifyListeners();
+    }
   }
 
   // Clear all data

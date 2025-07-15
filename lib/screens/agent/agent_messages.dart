@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import 'package:paisa_app/widgets/agent_action.dart';
 import 'package:provider/provider.dart';
 import 'agent_provider.dart';
 
@@ -106,7 +107,7 @@ class AgentMessages extends StatelessWidget {
 
   Widget _buildMessageBubble(
     BuildContext context,
-    Map<String, String> msg,
+    Map<String, dynamic> msg,
     bool isUser,
   ) {
     final theme = Theme.of(context);
@@ -154,9 +155,41 @@ class AgentMessages extends StatelessWidget {
     );
   }
 
-  Widget _buildAssistantMessage(BuildContext context, String content) {
+  Widget _buildAssistantMessage(BuildContext context, dynamic content) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    if (content is Map) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Material(
+          color: colorScheme.surfaceContainerLowest,
+          child: InkWell(
+            onTap: () {
+              executeAgentAction(context, content as Map<String, dynamic>);
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: colorScheme.outline.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'View transactions',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return MarkdownWidget(
       data: content,

@@ -1,18 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:paisa_app/widgets/agent_action.dart';
 import 'package:provider/provider.dart';
 import 'agent.service.dart';
 import '../transactions/transactions_provider.dart';
 
 class AgentProvider extends ChangeNotifier {
   final AgentService _agentService = AgentService();
-  final List<Map<String, String>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   bool _cancelRequested = false;
   ScrollController? _scrollController;
 
   // Getters
-  List<Map<String, String>> get messages => List.unmodifiable(_messages);
+  List<Map<String, dynamic>> get messages => List.unmodifiable(_messages);
   TextEditingController get controller => _controller;
   bool get isLoading => _isLoading;
   bool get cancelRequested => _cancelRequested;
@@ -67,27 +70,53 @@ class AgentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _agentService.chat(_messages);
+      final List<Map<String, String>> messages = [];
+      for (final msg in [..._messages]) {
+        if (msg['content'] is Map) {
+          msg['content'] = jsonEncode(msg['content']);
+        }
+
+        messages.add({'role': msg['role'], 'content': msg['content']});
+      }
+
+      var response = await _agentService.chat(messages);
+
+      try {
+        final responseJson =
+            jsonDecode(response['content'] ?? "") as Map<String, dynamic>;
+        response['content'] = responseJson;
+        executeAgentAction(context, responseJson);
+      } catch (e) {
+        print(e);
+      }
 
       if (_cancelRequested) {
         _isLoading = false;
-        notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
         return;
       }
 
       _messages.add(response);
       _isLoading = false;
       _scrollToBottom();
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
 
       // Refetch transactions after successful agent response
-      if (context != null) {
+      if (context != null && response['content'] is String) {
         try {
           final transactionsProvider = Provider.of<TransactionsProvider>(
             context,
             listen: false,
           );
-          await transactionsProvider.refreshTransactions();
+          await transactionsProvider.refreshTransactions(
+            ModalRoute.of(context)!.settings.arguments
+                    as Map<String, dynamic>? ??
+                {},
+          );
         } catch (e) {
           print('Failed to refresh transactions: $e');
         }
@@ -107,7 +136,9 @@ class AgentProvider extends ChangeNotifier {
       });
       _isLoading = false;
       _scrollToBottom();
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
   }
 

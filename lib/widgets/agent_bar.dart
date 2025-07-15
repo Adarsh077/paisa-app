@@ -94,7 +94,10 @@ class AgentBar extends StatelessWidget {
           orElse: () => {},
         );
         if (latestMessage.isNotEmpty) {
-          String content = latestMessage['content'] ?? '';
+          String content = "Ask me anything";
+          if (latestMessage['content'] is String) {
+            content = latestMessage['content'] ?? '';
+          }
           // Limit the placeholder text length and remove line breaks
           content = content.replaceAll('\n', ' ').trim();
           if (content.length > 100) {

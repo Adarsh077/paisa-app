@@ -34,8 +34,20 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     );
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TransactionsProvider>().loadInitialTransactions();
+      context.read<TransactionsProvider>().loadInitialTransactions(
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ??
+            {},
+      );
     });
+  }
+
+  // detect when arguments change
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    context.read<TransactionsProvider>().loadInitialTransactions(
+      ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {},
+    );
   }
 
   @override
@@ -62,15 +74,22 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     // Existing load more logic
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      context.read<TransactionsProvider>().loadMoreTransactions().catchError((
-        e,
-      ) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to load more transactions')),
-          );
-        }
-      });
+      context
+          .read<TransactionsProvider>()
+          .loadMoreTransactions(
+            ModalRoute.of(context)!.settings.arguments
+                    as Map<String, dynamic>? ??
+                {},
+          )
+          .catchError((e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Failed to load more transactions'),
+                ),
+              );
+            }
+          });
     }
   }
 
@@ -112,9 +131,12 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           const SizedBox(height: 16),
                           FilledButton(
                             onPressed:
-                                () =>
-                                    transactionsProvider
-                                        .loadInitialTransactions(),
+                                () => transactionsProvider
+                                    .loadInitialTransactions(
+                                      ModalRoute.of(context)!.settings.arguments
+                                              as Map<String, dynamic>? ??
+                                          {},
+                                    ),
                             child: const Text('Retry'),
                           ),
                         ],

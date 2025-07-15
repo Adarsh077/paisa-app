@@ -41,11 +41,13 @@ class TransactionsService {
   Future<TransactionsResponse> getTransactions({
     String? cursor,
     int limit = 20,
+    Map<String, dynamic>? filters,
   }) async {
     final url = Uri.parse('${AppConstants.baseUrl}/transactions').replace(
       queryParameters: {
         'limit': limit.toString(),
         if (cursor != null) 'cursor': cursor,
+        if (filters != null) ...filters,
       },
     );
 
@@ -68,6 +70,7 @@ class TransactionsService {
         grouped[date] = [];
       }
       grouped[date]!.add({
+        '_id': txn['_id'] ?? '',
         'label': txn['label'] ?? '',
         'amount': '₹${txn['amount']}',
         'type': txn['type'] ?? '',
