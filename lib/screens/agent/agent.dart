@@ -6,6 +6,8 @@ import 'agent_provider.dart';
 import 'agent_messages.dart';
 import 'agent_input.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../providers/background_service_status_provider.dart';
+import '../../widgets/background_service_status_widget.dart';
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key});
@@ -24,6 +26,8 @@ class _AgentScreenState extends State<AgentScreen> {
     // Set the scroll controller in the provider after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AgentProvider>().setScrollController(_scrollController);
+      // Start monitoring background service status
+      context.read<BackgroundServiceStatusProvider>().startStatusMonitoring();
     });
   }
 
@@ -82,6 +86,12 @@ class _AgentScreenState extends State<AgentScreen> {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16.0),
+            child: BackgroundServiceStatusWidget(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

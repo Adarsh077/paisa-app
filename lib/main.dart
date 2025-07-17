@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:paisa_app/screens/index.dart';
 import 'package:provider/provider.dart';
 import 'package:paisa_app/screens/agent/agent_provider.dart';
+import 'package:paisa_app/providers/background_service_status_provider.dart';
 import './routes.dart' as routes;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -66,6 +67,16 @@ class MainApp extends StatelessWidget {
           providers: [
             ChangeNotifierProvider(create: (context) => AgentProvider()),
             ChangeNotifierProvider(create: (context) => TransactionsProvider()),
+            ChangeNotifierProvider(
+              create: (context) {
+                final provider = BackgroundServiceStatusProvider();
+                // Start monitoring automatically when provider is created
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  provider.startStatusMonitoring();
+                });
+                return provider;
+              },
+            ),
           ],
           child: MaterialApp(
             theme: ThemeData(
