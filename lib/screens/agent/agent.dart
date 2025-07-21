@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_logs/flutter_logs.dart';
-import 'package:paisa_app/background_service.dart';
 import 'package:provider/provider.dart';
 import 'agent_provider.dart';
 import 'agent_messages.dart';
 import 'agent_input.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../../providers/background_service_status_provider.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import '../../providers/background_service_status_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/background_service_status_widget.dart';
 import '../../routes.dart' as routes;
 
 class AgentScreen extends StatefulWidget {
@@ -29,7 +26,7 @@ class _AgentScreenState extends State<AgentScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AgentProvider>().setScrollController(_scrollController);
       // Start monitoring background service status
-      context.read<BackgroundServiceStatusProvider>().startStatusMonitoring();
+      // context.read<BackgroundServiceStatusProvider>().startStatusMonitoring();
     });
   }
 
