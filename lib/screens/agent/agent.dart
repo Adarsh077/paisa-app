@@ -7,7 +7,9 @@ import 'agent_messages.dart';
 import 'agent_input.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../providers/background_service_status_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/background_service_status_widget.dart';
+import '../../routes.dart' as routes;
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key});
@@ -86,10 +88,36 @@ class _AgentScreenState extends State<AgentScreen> {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
+        actions: [
+          const Padding(
+            padding: EdgeInsets.only(right: 8.0),
             child: BackgroundServiceStatusWidget(),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                final authProvider = context.read<AuthProvider>();
+                await authProvider.logout();
+                if (mounted) {
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil(routes.login, (route) => false);
+                }
+              }
+            },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout),
+                        SizedBox(width: 8),
+                        Text('Logout'),
+                      ],
+                    ),
+                  ),
+                ],
           ),
         ],
       ),

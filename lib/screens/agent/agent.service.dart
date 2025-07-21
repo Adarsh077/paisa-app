@@ -1,15 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../constants.dart';
+import '../../services/auth_service.dart';
 
 class AgentService {
+  final AuthService _authService = AuthService();
+
   AgentService();
 
   Future<Map<String, dynamic>> chat(List<Map<String, String>> messages) async {
     final url = Uri.parse('${AppConstants.agentBaseUrl}/chat');
+    final headers = await _authService.getAuthHeaders();
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: headers,
       body: jsonEncode({"messages": messages}),
     );
     if (response.statusCode == 200) {

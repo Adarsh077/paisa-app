@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../constants.dart';
+import '../../services/auth_service.dart';
+import '../../services/api_service.dart';
 
 class PaginationInfo {
   final bool hasNext;
@@ -36,6 +38,8 @@ class TransactionsResponse {
 }
 
 class TransactionsService {
+  final AuthService _authService = AuthService();
+
   TransactionsService();
 
   Future<TransactionsResponse> getTransactions({
@@ -51,7 +55,8 @@ class TransactionsService {
       },
     );
 
-    final response = await http.get(url);
+    final headers = await _authService.getAuthHeaders();
+    final response = await http.get(url, headers: headers);
     if (response.statusCode != 200) {
       throw Exception('Failed to load transactions');
     }

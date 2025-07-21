@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:readsms/readsms.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 
 Future<void> initializeService() async {
@@ -215,9 +216,15 @@ Future<Map<String, dynamic>?> sendSmsMessage(String message) async {
   for (int attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       final url = Uri.parse('${AppConstants.agentBaseUrl}/sms');
+
+      // Get auth headers
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
       final headers = {
         'Content-Type': 'application/json',
         'User-Agent': 'PaisaApp/1.0',
+        if (token != null) 'Authorization': 'Bearer $token',
       };
 
       final body = json.encode({

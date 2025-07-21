@@ -4,6 +4,7 @@ import 'package:paisa_app/screens/index.dart';
 import 'package:provider/provider.dart';
 import 'package:paisa_app/screens/agent/agent_provider.dart';
 import 'package:paisa_app/providers/background_service_status_provider.dart';
+import 'package:paisa_app/providers/auth_provider.dart';
 import './routes.dart' as routes;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_logs/flutter_logs.dart';
@@ -65,6 +66,7 @@ class MainApp extends StatelessWidget {
 
         return MultiProvider(
           providers: [
+            ChangeNotifierProvider(create: (context) => AuthProvider()),
             ChangeNotifierProvider(create: (context) => AgentProvider()),
             ChangeNotifierProvider(create: (context) => TransactionsProvider()),
             ChangeNotifierProvider(
@@ -96,6 +98,9 @@ class MainApp extends StatelessWidget {
             themeMode: ThemeMode.system,
             initialRoute: routes.initalRoute,
             routes: {
+              routes.authWrapper: (context) => const AuthWrapper(),
+              routes.login: (context) => const LoginScreen(),
+              routes.register: (context) => const RegisterScreen(),
               routes.transactions: (context) => const TransactionsScreen(),
               routes.agent: (context) => const AgentScreen(),
             },
