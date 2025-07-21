@@ -24,7 +24,7 @@ class _AgentScreenState extends State<AgentScreen> {
   @override
   void initState() {
     super.initState();
-    _getPermission();
+    // _getPermission();
     // Set the scroll controller in the provider after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AgentProvider>().setScrollController(_scrollController);
@@ -33,40 +33,40 @@ class _AgentScreenState extends State<AgentScreen> {
     });
   }
 
-  Future<bool> _getPermission() async {
-    try {
-      FlutterLogs.logThis(
-        tag: 'background-process',
-        subTag: 'permissions',
-        logMessage: 'Requesting permissions for background process',
-        level: LogLevel.INFO,
-      );
+  // Future<bool> _getPermission() async {
+  //   try {
+  //     FlutterLogs.logThis(
+  //       tag: 'background-process',
+  //       subTag: 'permissions',
+  //       logMessage: 'Requesting permissions for background process',
+  //       level: LogLevel.INFO,
+  //     );
 
-      await requestAllPermissions();
+  //     await requestAllPermissions();
 
-      FlutterLogs.logThis(
-        tag: 'background-process',
-        subTag: 'permissions',
-        logMessage: 'Requesting permissions for notifications',
-        level: LogLevel.INFO,
-      );
+  //     FlutterLogs.logThis(
+  //       tag: 'background-process',
+  //       subTag: 'permissions',
+  //       logMessage: 'Requesting permissions for notifications',
+  //       level: LogLevel.INFO,
+  //     );
 
-      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-          FlutterLocalNotificationsPlugin();
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
+  //     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  //         FlutterLocalNotificationsPlugin();
+  //     await flutterLocalNotificationsPlugin
+  //         .resolvePlatformSpecificImplementation<
+  //           AndroidFlutterLocalNotificationsPlugin
+  //         >()
+  //         ?.requestNotificationsPermission();
 
-      await initializeService();
+  //     await initializeService();
 
-      return true;
-    } catch (e) {
-      print(e);
-      return false;
-    }
-  }
+  //     return true;
+  //   } catch (e) {
+  //     print(e);
+  //     return false;
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -89,10 +89,10 @@ class _AgentScreenState extends State<AgentScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          const Padding(
-            padding: EdgeInsets.only(right: 8.0),
-            child: BackgroundServiceStatusWidget(),
-          ),
+          // const Padding(
+          //   padding: EdgeInsets.only(right: 8.0),
+          //   child: BackgroundServiceStatusWidget(),
+          // ),
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'logout') {
