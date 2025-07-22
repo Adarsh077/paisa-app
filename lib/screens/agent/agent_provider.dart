@@ -70,15 +70,13 @@ class AgentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final List<Map<String, String>> messages = [];
-      for (final msg in [..._messages]) {
-        if (msg['content'] is Map) {
-          msg['content'] = jsonEncode(msg['content']);
-        }
-
-        messages.add({'role': msg['role'], 'content': msg['content']});
-      }
-
+      final messages =
+          _messages.map((m) {
+            if (m['content'] is Map) {
+              m['content'] = jsonEncode(m['content']);
+            }
+            return m;
+          }).toList();
       var response = await _agentService.chat(messages);
 
       try {

@@ -8,7 +8,7 @@ class AgentService {
 
   AgentService();
 
-  Future<Map<String, dynamic>> chat(List<Map<String, String>> messages) async {
+  Future<Map<String, dynamic>> chat(List<Map<String, dynamic>> messages) async {
     final url = Uri.parse('${AppConstants.agentBaseUrl}/chat');
     final headers = await _authService.getAuthHeaders();
     final response = await http.post(

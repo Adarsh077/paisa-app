@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../constants.dart';
 import '../../services/auth_service.dart';
-import '../../services/api_service.dart';
 
 class PaginationInfo {
   final bool hasNext;
