@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:paisa_app/widgets/agent_action.dart';
+import 'package:paisa_app/widgets/report_dialog.dart';
 import 'package:provider/provider.dart';
 import 'agent_provider.dart';
 
-class AgentMessages extends StatelessWidget {
+class AgentMessages extends StatefulWidget {
   final ScrollController scrollController;
 
   const AgentMessages({super.key, required this.scrollController});
+
+  @override
+  State<AgentMessages> createState() => _AgentMessagesState();
+}
+
+class _AgentMessagesState extends State<AgentMessages> {
+  final Set<int> _reportedMessages = <int>{};
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +26,7 @@ class AgentMessages extends StatelessWidget {
         }
 
         return ListView.builder(
-          controller: scrollController,
+          controller: widget.scrollController,
           padding: const EdgeInsets.all(16),
           itemCount:
               agentProvider.messages.length + (agentProvider.isLoading ? 1 : 0),
@@ -31,7 +39,13 @@ class AgentMessages extends StatelessWidget {
             final msg = agentProvider.messages[index];
             final isUser = msg['role'] == 'user';
 
-            return _buildMessageBubble(context, msg, isUser);
+            return _buildMessageBubble(
+              context,
+              msg,
+              isUser,
+              index,
+              agentProvider.messages,
+            );
           },
         );
       },
@@ -109,35 +123,44 @@ class AgentMessages extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> msg,
     bool isUser,
+    int messageIndex,
+    List<Map<String, dynamic>> allMessages,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Align(
-        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
+              ),
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding:
+                  isUser
+                      ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+                      : EdgeInsets.zero,
+              decoration:
+                  isUser
+                      ? BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      )
+                      : null,
+              child:
+                  isUser
+                      ? _buildUserMessage(context, msg['content']!)
+                      : _buildAssistantMessage(context, msg['content']!),
+            ),
           ),
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding:
-              isUser
-                  ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
-                  : EdgeInsets.zero,
-          decoration:
-              isUser
-                  ? BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  )
-                  : null,
-          child:
-              isUser
-                  ? _buildUserMessage(context, msg['content']!)
-                  : _buildAssistantMessage(context, msg['content']!),
-        ),
+          if (!isUser) _buildReportButton(context, messageIndex, allMessages),
+        ],
       ),
     );
   }
@@ -205,6 +228,85 @@ class AgentMessages extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildReportButton(
+    BuildContext context,
+    int messageIndex,
+    List<Map<String, dynamic>> allMessages,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isReported = _reportedMessages.contains(messageIndex);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          if (isReported)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Reported',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            IconButton(
+              onPressed:
+                  () => _showReportDialog(context, allMessages, messageIndex),
+              icon: Icon(
+                Icons.report_outlined,
+                size: 22,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+              // padding: const EdgeInsets.all(4),
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              tooltip: 'Report message',
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportDialog(
+    BuildContext context,
+    List<Map<String, dynamic>> allMessages,
+    int messageIndex,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => ReportDialog(
+            messages: allMessages,
+            onReportSubmitted: () {
+              setState(() {
+                _reportedMessages.add(messageIndex);
+              });
+            },
+          ),
     );
   }
 }
